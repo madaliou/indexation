@@ -35,13 +35,14 @@ class FileUpload(object):
         st.info(__doc__)
         st.markdown(STYLE, unsafe_allow_html=True)
         file = st.file_uploader("Télécharger un fichier", type=self.fileTypes)
-        print('le nom du fichier : ',file.name)
+        
         show_file = st.empty()
         if not file:
             show_file.info("S'il vous plait télécharger un fichier de type: " + ", ".join(["csv", "png", "jpg"]))
             return
         content = file.getvalue()
         if isinstance(file, BytesIO):
+            print('le nom du fichier : ',file.name)
             show_file.image(file)
             if(file.name == "img_0_7.jpg"):
                 with open('img_0_7.json') as f:
