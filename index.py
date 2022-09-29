@@ -9,6 +9,7 @@ try:
     import io
     import base64
     import json
+    from streamlit_lottie import st_lottie
 except Exception as e:
     print(e)
 
@@ -25,6 +26,15 @@ class FileUpload(object):
 
     def __init__(self):
         self.fileTypes = ["csv", "png", "jpg"]
+
+    def load_lottieurl(url):
+        r = requests.get(url)
+        if r.status_code != 200:
+            return None
+        return r.json()
+
+    lottie_coding = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_fcfjwiyb.json")
+    st_lottie(lottie_coding, height=300, key="coding")
 
 
     def run(self):
