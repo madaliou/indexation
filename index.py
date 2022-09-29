@@ -96,14 +96,3 @@ if __name__ == "__main__":
     st.subheader("Recherche de documents par image")
     helper = FileUpload()
     helper.run()
-
-Rechercher = """
-        <form action="" method="POST">
-            <button type="submit"><font face="Comic Sans MS" color="#0000DD" size=4>Rechercher</font></button>
-        </form>
-        """
-left_column, right_column = st.columns(2)
-with left_column:
-    st.markdown(Rechercher, unsafe_allow_html=True)
-with right_column:
-    st.empty()
