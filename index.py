@@ -24,8 +24,7 @@ img {
 class FileUpload(object):
 
     def __init__(self):
-        self.fileTypes = ["csv", "png", "jpg"]
-
+        self.fileTypes = ["jpeg", "png", "jpg"]
 
     def run(self):
         """
@@ -38,7 +37,7 @@ class FileUpload(object):
         
         show_file = st.empty()
         if not file:
-            show_file.info("S'il vous plait télécharger un fichier de type: " + ", ".join(["csv", "png", "jpg"]))
+            show_file.info("S'il vous plait télécharger un fichier de type: " + ", ".join(["jpeg", "png", "jpg"]))
             return
         content = file.getvalue()
         if isinstance(file, BytesIO):
@@ -53,13 +52,16 @@ class FileUpload(object):
                     print(next(iter(newDict)))
                     print(dict(sorted(d.items(), key=lambda item: item[1], reverse = True)))
             elif(file.name == "21-TL.jpg"):
-                 with open('21-TL.json') as f:
+                with open('21-TL.json') as f:
                     d = json.load(f)
                     newDict = dict(sorted(d.items(), key=lambda item: item[1], reverse = True))
                     st.info("Le document le plus proche est : " + str(next(iter(newDict))))
                     show_file.image('images/'+str(next(iter(newDict))+'.jpg'))
                     print(next(iter(newDict)))
                     print(dict(sorted(d.items(), key=lambda item: item[1], reverse = True)))
+            else:
+                st.info("Le document choisi n'existe pas ")
+
             #binary_file_data = file.read()
             #print(binary_file_data)
             #base64_encoded_data = base64.b64encode(binary_file_data)
@@ -87,16 +89,11 @@ class FileUpload(object):
 
 
 if __name__ == "__main__":
-    st.title("Laboratoire de l'IFI")
+    st.title("Laboratoire de l'université")
     menu = ["Home", "Dataset", "DocumentFiles", "About"]
     choice = st.sidebar.selectbox("Menu", menu)
 
-    st.subheader("Accueil")
-
-
-
-
-
+    st.subheader("Recherche de documents par image")
     helper = FileUpload()
     helper.run()
 
