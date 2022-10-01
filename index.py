@@ -9,6 +9,11 @@ try:
     import io
     import base64
     import json
+    import cv2 as cv
+    import pickle
+    import tqdm
+    import os
+    import math
 except Exception as e:
     print(e)
 
@@ -34,6 +39,10 @@ class FileUpload(object):
         st.info(__doc__)
         st.markdown(STYLE, unsafe_allow_html=True)
         file = st.file_uploader("Télécharger un fichier", type=self.fileTypes)
+
+        prevCol1, prevCol2 = st.columns(2)
+
+        col1, col2, col3, col4, col5 = st.columns(5)
         
         show_file = st.empty()
         if not file:
@@ -42,46 +51,58 @@ class FileUpload(object):
         content = file.getvalue()
         if isinstance(file, BytesIO):
             print('le nom du fichier : ',file.name)
-            show_file.image(file)
-            if(file.name == "img_0_7.jpg"):
-                with open('img_0_7.json') as f:
-                    d = json.load(f)
-                    newDict = dict(sorted(d.items(), key=lambda item: item[1], reverse = True))
-                    st.info("Le document le plus proche est : " + str(next(iter(newDict))))
-                    show_file.image('images/'+str(next(iter(newDict))+'.jpg'))
-                    print(next(iter(newDict)))
-                    print(dict(sorted(d.items(), key=lambda item: item[1], reverse = True)))
-            elif(file.name == "21-TL.jpg"):
-                with open('21-TL.json') as f:
-                    d = json.load(f)
-                    newDict = dict(sorted(d.items(), key=lambda item: item[1], reverse = True))
-                    st.info("Le document le plus proche est : " + str(next(iter(newDict))))
-                    show_file.image('images/'+str(next(iter(newDict))+'.jpg'))
-                    print(next(iter(newDict)))
-                    print(dict(sorted(d.items(), key=lambda item: item[1], reverse = True)))
-            else:
-                st.info("Le document choisi n'existe pas ")
+            with prevCol1:
+                st.header("Le morceau de document à chercher ")
+                st.image(file)
+            #st.image(file)
+            with open(os.path.join('newImages',file.name),'wb') as f:
+                f.write(file.getbuffer())
+            imgToQuery = cv.imread(os.path.join('newImages',file.name), cv.COLOR_BGR2RGB)
 
-            #binary_file_data = file.read()
-            #print(binary_file_data)
-            #base64_encoded_data = base64.b64encode(binary_file_data)
+            imgToQueryToGray = cv.cvtColor(imgToQuery, cv.COLOR_RGB2GRAY)
+            #sift = cv.xfeatures2d.SIFT_create()
+            sift = cv.xfeatures2d.SIFT_create(nfeatures=200)
 
-            #with open("img_0_25.jpg", "rb") as img_file:
-                #b64_string = base64.b64encode(img_file.read())
-                #print(b64_string)
+            keypoints, descriptorToQuery = sift.detectAndCompute(imgToQueryToGray, None)
+            #chargement des descripteurs train et test
+            # laod a pickle file
+            with open("tablelsh/tableHashage.pickle", "rb") as file:
+                lsh = pickle.load(file)
+            finalDecompt = {}
+            #with tqdm(total=len(descriptorToQuery), desc="Chargement", bar_format="{l_bar}{bar} [ time left: {remaining} ]") as pbar:
+            for element in descriptorToQuery:
+                nn = lsh.query(element, num_results=3, distance_func="euclidean")
+                for ((vec,extra_data),distance) in nn:
+                    if extra_data not in finalDecompt:
+                        finalDecompt[extra_data] = 1
+                    else:
+                        finalDecompt[extra_data] +=1
+                    #pbar.update(1)
+            newDict = dict(sorted(finalDecompt.items(), key=lambda item: item[1], reverse = True))
+            print(newDict)
+            #st.info("Le document le plus proche est : " + str(next(iter(newDict))+'.jpg'))
+            #show_file = st.empty()
+            #show_file.image('images/'+str(next(iter(newDict))+'.jpg'))
+            
+            with col1:
+                st.info(str(next(iter(newDict))+' --> '+str(newDict.get(list(newDict)[0]) * 100//sum(newDict.values()))+' %'))
+                st.image('images/'+str(next(iter(newDict))+'.jpg'))
 
-            # http://127.0.01:5000/ is from the flask api
-            #url = 'http://localhost:8000/searchDocument'
-            #files = {'file': open(file.name, 'rb')}
-            #files={'file':io.BytesIO(file.getvalue())}
-            #files={"file": content, 'name': file.name}
-            #response = requests.post(url, files=files)
-            #response = requests.post(url, json={'name':"img_0_25.jpg", 'content': b64_string})
-            #show_file.info("La requete a marché avec cette reponse: ")
-            #print(response.json())
-            #show_file.info(response.json())
-            # data_table1 = pd.DataFrame(response.json())
-            # st.write(data_table1)
+            with col2:
+                st.info(str(list(newDict)[1])+' --> '+str(newDict.get(list(newDict)[1]) * 100//sum(newDict.values()))+' %')
+                st.image('images/'+str(list(newDict)[1])+'.jpg')
+
+            with col3:
+                st.info(str(list(newDict)[2])+' --> '+str(newDict.get(list(newDict)[2]) * 100//sum(newDict.values()))+' %')
+                st.image('images/'+str(list(newDict)[2])+'.jpg')
+            
+            with col4:
+                st.info(str(list(newDict)[3])+' --> '+str(newDict.get(list(newDict)[3]) * 100//sum(newDict.values()))+' %')
+                st.image('images/'+str(list(newDict)[3])+'.jpg')
+            
+            with col5:
+                st.info(str(list(newDict)[4])+' --> '+str(newDict.get(list(newDict)[4]) * 100//sum(newDict.values()))+' %')
+                st.image('images/'+str(list(newDict)[4])+'.jpg')
         else:
             data = pd.read_csv(file)
             st.dataframe(data.head(10))
